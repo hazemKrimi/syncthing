@@ -2624,6 +2624,7 @@ func (m *model) generateClusterConfigRLocked(device protocol.DeviceID) (*protoco
 		// the missing index info (and drop all the info). We will send
 		// another cluster config once the folder is started.
 		protocolFolder.Paused = folderCfg.Paused || fs == nil
+		protocolFolder.OutOfSpace = folderCfg.OutOfSpace
 
 		for _, folderDevice := range folderCfg.Devices {
 			deviceCfg, _ := m.cfg.Device(folderDevice.DeviceID)

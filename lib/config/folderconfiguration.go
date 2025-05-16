@@ -73,6 +73,7 @@ type FolderConfiguration struct {
 	DisableSparseFiles      bool                        `json:"disableSparseFiles" xml:"disableSparseFiles"`
 	DisableTempIndexes      bool                        `json:"disableTempIndexes" xml:"disableTempIndexes"`
 	Paused                  bool                        `json:"paused" xml:"paused"`
+	OutOfSpace              bool                        `json:"outOfSpace" xml:"outOfSpace"`
 	WeakHashThresholdPct    int                         `json:"weakHashThresholdPct" xml:"weakHashThresholdPct"`
 	MarkerName              string                      `json:"markerName" xml:"markerName"`
 	CopyOwnershipFromParent bool                        `json:"copyOwnershipFromParent" xml:"copyOwnershipFromParent"`
@@ -377,6 +378,7 @@ func (f *FolderConfiguration) CheckAvailableSpace(req uint64) error {
 		return nil //nolint: nilerr
 	}
 	if err := checkAvailableSpace(req, f.MinDiskFree, usage); err != nil {
+		f.OutOfSpace = true
 		return fmt.Errorf("insufficient space in folder %v (%v): %w", f.Description(), fs.URI(), err)
 	}
 	return nil

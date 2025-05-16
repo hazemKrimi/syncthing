@@ -58,7 +58,7 @@ const (
 	remoteFolderUnknown remoteFolderState = iota
 	remoteFolderNotSharing
 	remoteFolderPaused
-	remoteFolderStopped
+	remoteFolderOutOfSpace	
 	remoteFolderValid
 )
 
@@ -70,8 +70,8 @@ func (s remoteFolderState) String() string {
 		return "notSharing"
 	case remoteFolderPaused:
 		return "paused"
-	case remoteFolderStopped:
-		return "stopped"
+	case remoteFolderOutOfSpace:
+		return "outOfSpace"
 	case remoteFolderValid:
 		return "valid"
 	default:
