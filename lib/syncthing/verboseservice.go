@@ -159,6 +159,12 @@ func (*verboseService) formatEvent(ev events.Event) string {
 		label := data["label"]
 		return fmt.Sprintf("Folder %v (%v) was paused", id, label)
 
+	case events.FolderOutOfSpace:
+		data := ev.Data.(map[string]string)
+		id := data["id"]
+		label := data["label"]
+		return fmt.Sprintf("Folder %v (%v) is out of space", id, label)
+
 	case events.FolderResumed:
 		data := ev.Data.(map[string]string)
 		id := data["id"]

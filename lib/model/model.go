@@ -181,6 +181,7 @@ var (
 	errDeviceUnknown    = errors.New("unknown device")
 	errDevicePaused     = errors.New("device is paused")
 	ErrFolderPaused     = errors.New("folder is paused")
+	ErrFolderOutOfSpace = errors.New("folder is out of space")
 	ErrFolderNotRunning = errors.New("folder is not running")
 	ErrFolderMissing    = errors.New("no such folder")
 	errNoVersioner      = errors.New("folder has no versioner")
@@ -1426,6 +1427,12 @@ func (m *model) ccHandleFolders(folders []protocol.Folder, deviceCfg config.Devi
 		if folder.Paused {
 			indexHandlers.Remove(folder.ID)
 			seenFolders[cfg.ID] = remoteFolderPaused
+			continue
+		}
+
+		if folder.OutOfSpace {
+			indexHandlers.Remove(folder.ID)
+			seenFolders[cfg.ID] = remoteFolderOutOfSpace
 			continue
 		}
 
@@ -3265,6 +3272,8 @@ func (m *model) checkFolderRunningRLocked(folder string) error {
 		return ErrFolderMissing
 	} else if cfg.Paused {
 		return ErrFolderPaused
+	} else if cfg.OutOfSpace {
+		return ErrFolderOutOfSpace
 	}
 
 	return ErrFolderNotRunning

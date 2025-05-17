@@ -54,6 +54,7 @@ const (
 	FolderScanProgress
 	FolderPaused
 	FolderResumed
+	FolderOutOfSpace
 	FolderWatchStateChanged
 	ListenAddressesChanged
 	LoginAttempt
@@ -214,6 +215,8 @@ func UnmarshalEventType(s string) EventType {
 		return FolderPaused
 	case "FolderResumed":
 		return FolderResumed
+	case "FolderOutOfSpace":
+		return FolderOutOfSpace
 	case "ListenAddressesChanged":
 		return ListenAddressesChanged
 	case "LoginAttempt":
