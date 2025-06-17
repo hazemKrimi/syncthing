@@ -1180,6 +1180,14 @@ func (f *folder) setError(err error) {
 	}
 
 	f.stateTracker.setError(err)
+
+	var deviceIDs []protocol.DeviceID
+
+	for key := range f.model.cfg.Devices() {
+		deviceIDs = append(deviceIDs, key)
+	}
+
+	f.model.sendClusterConfig(deviceIDs)
 }
 
 func (f *folder) pullBasePause() time.Duration {

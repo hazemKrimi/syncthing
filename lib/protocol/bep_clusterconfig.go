@@ -58,6 +58,7 @@ type Folder struct {
 	IgnoreDelete       bool
 	DisableTempIndexes bool
 	Paused             bool
+	OutOfSpace         bool
 	Devices            []Device
 }
 

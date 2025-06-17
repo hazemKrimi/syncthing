@@ -290,6 +290,8 @@ func (m *model) serve(ctx context.Context) error {
 		case <-m.promotionTimer.C:
 			l.Debugln("promotion timer fired")
 			m.promoteConnections()
+		case event := <-m.evLogger.Subscribe(events.FolderErrors).C():
+			fmt.Println(fmt.Sprintf("FOLDER_ERROR: %v", event))
 		}
 	}
 }
@@ -1439,6 +1441,12 @@ func (m *model) ccHandleFolders(folders []protocol.Folder, deviceCfg config.Devi
 				"device":      deviceID.String(),
 			})
 			l.Infof("Unexpected folder %s sent from device %q; ensure that the folder exists and that this device is selected under \"Share With\" in the folder configuration.", folder.Description(), deviceID)
+			continue
+		}
+
+		if folder.OutOfSpace {
+			indexHandlers.Remove(folder.ID)
+			seenFolders[cfg.ID] = remoteFolderOutOfSpace
 			continue
 		}
 
@@ -2614,6 +2622,8 @@ func (m *model) generateClusterConfigRLocked(device protocol.DeviceID) (*protoco
 		// the missing index info (and drop all the info). We will send
 		// another cluster config once the folder is started.
 		protocolFolder.Paused = folderCfg.Paused
+		folderState, _, _ := m.State(folderCfg.ID)
+		protocolFolder.OutOfSpace = folderState == FolderError.String()
 
 		for _, folderDevice := range folderCfg.Devices {
 			deviceCfg, _ := m.cfg.Device(folderDevice.DeviceID)
