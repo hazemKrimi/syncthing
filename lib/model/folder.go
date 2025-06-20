@@ -247,6 +247,9 @@ func (f *folder) Serve(ctx context.Context) error {
 		case <-f.versionCleanupTimer.C:
 			l.Debugln(f, "Doing version cleanup")
 			f.versionCleanupTimerFired()
+
+		case <-f.stateTracker.evLogger.Subscribe(events.StateChanged).C():
+			f.announceFolderState()
 		}
 
 		if err != nil {
@@ -1180,14 +1183,10 @@ func (f *folder) setError(err error) {
 	}
 
 	f.stateTracker.setError(err)
+}
 
-	var deviceIDs []protocol.DeviceID
-
-	for key := range f.model.cfg.Devices() {
-		deviceIDs = append(deviceIDs, key)
-	}
-
-	f.model.sendClusterConfig(deviceIDs)
+func (f *folder) announceFolderState() {
+	f.model.sendClusterConfig(f.DeviceIDs())
 }
 
 func (f *folder) pullBasePause() time.Duration {

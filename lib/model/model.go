@@ -290,8 +290,6 @@ func (m *model) serve(ctx context.Context) error {
 		case <-m.promotionTimer.C:
 			l.Debugln("promotion timer fired")
 			m.promoteConnections()
-		case event := <-m.evLogger.Subscribe(events.FolderErrors).C():
-			fmt.Println(fmt.Sprintf("FOLDER_ERROR: %v", event))
 		}
 	}
 }
@@ -1424,7 +1422,7 @@ func (m *model) ccHandleFolders(folders []protocol.Folder, deviceCfg config.Devi
 			if err := m.observed.AddOrUpdatePendingFolder(folder.ID, of, deviceID); err != nil {
 				l.Warnf("Failed to persist pending folder entry to database: %v", err)
 			}
-			if !folder.Paused {
+			if !folder.Paused && !folder.OutOfSpace {
 				indexHandlers.AddIndexInfo(folder.ID, ccDeviceInfos[folder.ID])
 			}
 			updatedPending = append(updatedPending, updatedPendingFolder{
@@ -1444,15 +1442,15 @@ func (m *model) ccHandleFolders(folders []protocol.Folder, deviceCfg config.Devi
 			continue
 		}
 
-		if folder.OutOfSpace {
-			indexHandlers.Remove(folder.ID)
-			seenFolders[cfg.ID] = remoteFolderOutOfSpace
-			continue
-		}
-
 		if folder.Paused {
 			indexHandlers.Remove(folder.ID)
 			seenFolders[cfg.ID] = remoteFolderPaused
+			continue
+		}
+
+		if folder.OutOfSpace {
+			indexHandlers.Remove(folder.ID)
+			seenFolders[cfg.ID] = remoteFolderOutOfSpace
 			continue
 		}
 
@@ -2622,8 +2620,9 @@ func (m *model) generateClusterConfigRLocked(device protocol.DeviceID) (*protoco
 		// the missing index info (and drop all the info). We will send
 		// another cluster config once the folder is started.
 		protocolFolder.Paused = folderCfg.Paused
-		folderState, _, _ := m.State(folderCfg.ID)
-		protocolFolder.OutOfSpace = folderState == FolderError.String()
+
+		runner, _ := m.folderRunners.Get(folderCfg.ID)
+		protocolFolder.OutOfSpace = len(runner.Errors()) > 0
 
 		for _, folderDevice := range folderCfg.Devices {
 			deviceCfg, _ := m.cfg.Device(folderDevice.DeviceID)
